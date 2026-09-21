@@ -1,0 +1,171 @@
+/* Dashboard grid. Fixed viewport, panels scroll internally.
+
+   +---------------------------------------------------------------+ tape
+   +---------------------------------------------------------------+ command bar
+   | watchlist |          chart                        | portfolio |
+   |           |---------------------------------------|           |
+   |           |          news feed                    |           |
+   +---------------------------------------------------------------+
+   |                      backtest                                 |
+   +---------------------------------------------------------------+ stats strip
+*/
+.app {
+  display: grid;
+  height: 100vh;
+  width: 100vw;
+  grid-template-rows: var(--tape-h) var(--cmd-h) minmax(0, 1fr) minmax(0, 0.62fr) var(--strip-h);
+  grid-template-columns: 300px minmax(0, 1fr) 340px;
+  grid-template-areas:
+    "tape tape tape"
+    "cmd cmd cmd"
+    "watch main port"
+    "bt bt bt"
+    "strip strip strip";
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+}
+.area-tape  { grid-area: tape; }
+.area-cmd   { grid-area: cmd; }
+.area-watch { grid-area: watch; }
+.area-main  { grid-area: main; display: grid; grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); gap: 2px; min-height: 0; }
+.area-port  { grid-area: port; }
+.area-bt    { grid-area: bt; }
+.area-strip { grid-area: strip; }
+
+@media (max-width: 1280px) {
+  .app { grid-template-columns: 260px minmax(0, 1fr) 300px; }
+}
+
+/* ---------------------------------------------------------- ticker tape */
+.tape {
+  height: var(--tape-h);
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.tape-label {
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex; align-items: center;
+  padding: 0 8px;
+  background: var(--amber);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  z-index: 2;
+}
+.tape-track {
+  flex: 1 1 auto;
+  overflow: hidden;
+  height: 100%;
+  position: relative;
+}
+.tape-scroll {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  white-space: nowrap;
+  animation: tape-scroll var(--tape-duration, 60s) linear infinite;
+  will-change: transform;
+}
+.tape-track:hover .tape-scroll { animation-play-state: paused; }
+@keyframes tape-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.tape-item {
+  display: inline-flex; gap: 6px; align-items: center;
+  padding: 0 14px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  height: 100%;
+}
+.tape-item:hover { background: var(--bg-hover); }
+.tape-item .t { color: var(--amber); font-weight: 700; }
+.tape-item.selected .t { text-decoration: underline; }
+
+/* ---------------------------------------------------------- command bar */
+.cmd {
+  height: var(--cmd-h);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 0 6px;
+}
+.cmd .prompt { color: var(--amber); font-weight: 700; }
+.cmd input {
+  flex: 0 0 260px;
+  height: 20px;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  color: var(--amber);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cmd .fkeys { display: flex; gap: 3px; margin-left: 6px; }
+.cmd .fkeys button { height: 18px; padding: 0 6px; font-size: var(--fs-xs); }
+.cmd .fkeys button .k { color: var(--amber); margin-right: 4px; }
+.cmd .msg { font-size: var(--fs-xs); color: var(--fg-dim); margin-left: 8px; }
+.cmd .msg.err { color: var(--red); }
+.cmd .right { margin-left: auto; display: flex; gap: 14px; font-size: var(--fs-xs); color: var(--fg-dim); align-items: center; }
+
+/* ---------------------------------------------------------- stats strip */
+.strip {
+  height: var(--strip-h);
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+.strip .cell {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.strip .cell .k { color: var(--fg-dim); font-size: var(--fs-xs); letter-spacing: 0.08em; }
+.strip .cell .v { color: var(--amber); font-weight: 700; font-size: var(--fs-lg); }
+.strip .cell .b { font-size: var(--fs-xs); }
+.strip .cell.lead { background: var(--amber); color: var(--bg); font-weight: 700; letter-spacing: 0.1em; font-size: var(--fs-xs); }
+
+/* ---------------------------------------------------------- news */
+.news-row {
+  display: grid;
+  grid-template-columns: 74px 40px 1fr 90px;
+  gap: 8px;
+  align-items: baseline;
+  padding: 1px 8px;
+  border-bottom: 1px solid #141414;
+  font-size: var(--fs-sm);
+}
+.news-row:hover { background: var(--bg-hover); }
+.news-row .time { color: var(--fg-dim); font-size: var(--fs-xs); }
+.news-row .src { color: var(--fg-mute); font-size: var(--fs-xs); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news-row .h { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.news-row .models { font-size: var(--fs-xs); margin-left: 8px; }
+
+/* ---------------------------------------------------------- chart */
+.chart-wrap { position: absolute; inset: 0; }
+.chart-legend {
+  position: absolute; top: 4px; left: 8px; z-index: 3;
+  display: flex; gap: 12px; font-size: var(--fs-xs); color: var(--fg-dim);
+  pointer-events: none;
+}
+.chart-legend b { color: var(--amber); font-size: var(--fs-md); }
+.legend-swatch { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 4px; }
+.legend-band { display: inline-block; width: 10px; height: 8px; vertical-align: middle; margin-right: 4px; }
+
+/* ---------------------------------------------------------- regime table */
+table.regime { font-size: var(--fs-xs); }
+table.regime td, table.regime th { padding: 0 5px; }
+table.regime th:first-child { color: var(--amber); }
+table.regime td.hi { color: var(--red); }
+table.regime td.lo { color: var(--green); }

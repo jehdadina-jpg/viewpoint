@@ -1,0 +1,118 @@
+# =============================================================================
+# VIEWPOINT - sentiment-driven Black-Litterman portfolio - configuration
+#
+# Every data source is swappable here. Switching from the offline sample
+# provider to a live API requires ONLY editing this file (and setting an env
+# var for the key) — no code changes.
+# =============================================================================
+
+universe:
+  # 16 liquid US large-caps, spread across sectors so the covariance matrix has
+  # real structure (tech / financials / energy / health / staples / industrial).
+  tickers:
+    - AAPL   # tech
+    - MSFT   # tech
+    - NVDA   # semis
+    - AMZN   # consumer disc / cloud
+    - GOOGL  # comms / tech
+    - META   # comms / tech
+    - JPM    # financials
+    - GS     # financials
+    - XOM    # energy
+    - CVX    # energy
+    - JNJ    # healthcare
+    - UNH    # healthcare
+    - PG     # staples
+    - KO     # staples
+    - HD     # consumer disc / retail
+    - CAT    # industrials
+  # Backtest window. Prices are pulled from `start` minus a warm-up buffer so the
+  # first rebalance already has a full covariance lookback.
+  start: "2022-01-01"
+  end: "2025-12-31"
+
+prices:
+  # yfinance | sample
+  #   yfinance -> real daily OHLCV, cached to SQLite after first pull
+  #   sample   -> deterministic synthetic GBM paths (offline demo / CI)
+  provider: yfinance
+  cache_db: storage/market.db
+  # If yfinance fails (no network / rate limited) fall back to sample data
+  # instead of crashing. The API response flags `data_source` so the UI can
+  # label it honestly.
+  fallback_to_sample: true
+
+news:
+  # sample | newsapi | reddit | yfinance
+  #   sample   -> synthetic headlines generated from templates. Sentiment is
+  #               weakly tied to *trailing* returns (news reacts to price), never
+  #               to future returns, so there is no look-ahead leakage.
+  #   newsapi  -> https://newsapi.org (free tier: last 30 days only, 100 req/day)
+  #   reddit   -> r/stocks, r/wallstreetbets via PRAW (needs client id/secret)
+  #   yfinance -> Ticker(...).news (recent only, no key needed)
+  #
+  # NOTE: none of the free live providers offer multi-year archives, so the
+  # *backtest* always needs historical text. Strategy: live provider fills
+  # recent days; anything older than the provider's window is filled by the
+  # sample generator and flagged `is_synthetic=1` in the DB.
+  provider: sample
+  cache_db: storage/market.db
+  newsapi:
+    api_key_env: NEWSAPI_KEY        # read from environment, never hard-coded
+    page_size: 50
+    language: en
+  reddit:
+    client_id_env: REDDIT_CLIENT_ID
+    client_secret_env: REDDIT_CLIENT_SECRET
+    user_agent: viewpoint-club-project
+    subreddits: [stocks, wallstreetbets, investing]
+  sample:
+    seed: 42
+    headlines_per_day_mean: 2.5     # Poisson rate per ticker per trading day
+
+sentiment:
+  # Ensemble members. Each must expose score(text) -> (score in [-1,1], confidence in [0,1]).
+  # Order doesn't matter; weights are normalised.
+  models:
+    vader:   { enabled: true,  weight: 1.0 }
+    finbert: { enabled: true,  weight: 1.5, model_name: ProsusAI/finbert, batch_size: 32, max_len: 64 }
+    lexicon: { enabled: true,  weight: 0.5 }   # Loughran-McDonald finance dictionary (offline)
+  # If FinBERT can't load (no torch / no network for weights) the ensemble
+  # proceeds with the remaining members and flags it in the API.
+  finbert_fallback_ok: true
+  aggregation:
+    half_life_days: 3.0             # exponential time decay of headline influence
+    lookback_days: 10               # how far back headlines contribute to a day's score
+    min_headlines: 1                # below this the daily score is NaN (no signal)
+
+black_litterman:
+  risk_aversion: 2.5                # delta in pi = delta * Sigma * w_mkt
+  tau: 0.05                         # scales prior uncertainty; standard 0.025–0.10
+  cov_lookback_days: 252            # trading days of returns for Sigma
+  cov_shrinkage: 0.10               # Ledoit-Wolf-style shrink toward diagonal
+  # Sentiment -> view mapping
+  view_scale_annual: 0.06           # +1 sentiment z-score => +6% annual expected return tilt
+  view_z_window_days: 60            # window for sentiment z-score normalisation
+  min_abs_z_for_view: 0.5           # ignore weak signals; fewer, stronger views
+  omega_floor: 0.0001               # additive floor on Omega_ii for numerical stability
+  omega_dispersion_mult: 4.0        # how strongly dispersion inflates Omega
+  monte_carlo_paths: 2000           # Colasanto et al. style path simulation for Q
+  horizon_days: 21                  # one rebalance period
+
+optimizer:
+  long_only: true
+  max_weight: 0.15
+  min_weight: 0.0
+  turnover_penalty: 2.0             # lambda on ||w - w_prev||^2; 0 disables. Tames monthly churn.
+
+backtest:
+  rebalance: monthly
+  transaction_cost_bps: 10          # per unit of turnover, one-way
+  risk_free_annual: 0.04
+  regime_vol_window: 21             # realized-vol window for regime split
+
+api:
+  host: 127.0.0.1
+  port: 8000
+  results_cache: storage/results.json
+  tick_interval_seconds: 1.0        # simulated live tick cadence

@@ -1,0 +1,17 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/storage/*.db
+backend/storage/*.json
+!backend/storage/.gitkeep
+.pytest_cache/
+
+# node
+node_modules/
+frontend/dist/
+
+# env / secrets
+.env
+*.log

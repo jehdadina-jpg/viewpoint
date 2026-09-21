@@ -1,0 +1,27 @@
+# --- core numerics ---
+numpy>=1.26,<3
+pandas>=2.2
+scipy>=1.11
+
+# --- data sources ---
+yfinance>=0.2.40
+requests>=2.31
+pyyaml>=6.0
+
+# --- sentiment models ---
+vaderSentiment>=3.3.2
+# FinBERT (ProsusAI/finbert). torch CPU build is fine; ~150MB model download on first run.
+transformers>=4.40
+torch>=2.2
+
+# --- api ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# --- optional live news providers (enable in config.yaml) ---
+# praw>=7.7            # Reddit
+# newsapi-python>=0.2  # NewsAPI (we call REST directly with requests; package not required)
+
+# --- dev ---
+pytest>=8.0
