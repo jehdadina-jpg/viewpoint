@@ -57,7 +57,7 @@ export function CommandBar({ universe, selected, onSelect, onCommand, wsStatus, 
           <span>PX:<span className="amber">{ds.prices}</span> NEWS:<span className={ds.news === "sample" ? "amber" : "green"}>{ds.news}</span> MODELS:<span className="amber">{ds.sentiment_models.join("+")}</span></span>
         )}
         {meta && <span>EOD {meta.last_price_date}</span>}
-        <span><span className={`status-dot ${wsStatus === "live" ? "live" : wsStatus === "down" ? "err" : ""}`} />{wsStatus === "live" ? "SIM FEED" : wsStatus.toUpperCase()}</span>
+        <span><span className={`status-dot ${wsStatus === "live" || wsStatus === "local" ? "live" : wsStatus === "down" ? "err" : ""}`} />{wsStatus === "live" ? "SIM FEED (WS)" : wsStatus === "local" ? "SIM FEED (LOCAL)" : wsStatus.toUpperCase()}</span>
       </div>
     </div>
   );

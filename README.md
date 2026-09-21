@@ -36,6 +36,19 @@ First run downloads FinBERT (~440 MB). Everything is cached in `backend/storage/
 
 Deep links for demos: `?t=NVDA` selects a ticker, `?regime=1` opens the regime tables.
 
+## Deploy to Vercel
+
+The research backend (torch, FinBERT, SQLite, WebSocket) cannot run on serverless hosting, so deployment uses a **snapshot mode**: run the pipeline locally, freeze every API response to JSON, and let a dependency-free FastAPI serve it. `vercel.json` defines two services, `frontend/` (Vite) and `deploy/backend/` (FastAPI), with `/api/*` rewritten to the backend.
+
+```bash
+cd backend
+python -m pipeline.run                  # (re)build results locally
+python -m pipeline.export_snapshot      # -> deploy/backend/snapshot.json (~7 MB)
+git add deploy/backend/snapshot.json && git commit -m "refresh snapshot" && git push
+```
+
+Then import the repo at vercel.com. No environment variables needed. Without a WebSocket the dashboard simulates ticks in the browser and labels the feed `SIM FEED (LOCAL)`. To refresh the data on the live site, re-run the two commands above and push.
+
 ## What you see
 
 **Price chart with sentiment overlay, and the news feed that produced it.** Green/red bands are the ensemble sentiment sign and strength; the amber line is the score itself (left axis). Each headline shows the ensemble score plus the three model votes (`FB` FinBERT, `LM` Loughran-McDonald, `VD` VADER).

@@ -17,7 +17,6 @@ export default function App() {
   const portfolio = useApi(() => api.portfolio());
   const backtest = useApi(() => api.backtest());
   const stats = useApi(() => api.stats());
-  const { ticks, status } = useTicks();
   // URL params for deep-linking / demos: ?t=NVDA&regime=1
   const params = new URLSearchParams(location.search);
   const [selected, setSelected] = useState<string>((params.get("t") ?? "NVDA").toUpperCase());
@@ -33,6 +32,7 @@ export default function App() {
 
   const universe = meta.data?.universe ?? stocks.data?.stocks.map((s) => s.ticker) ?? [];
   const rows = stocks.data?.stocks ?? [];
+  const { ticks, status } = useTicks(rows);
   const cur = rows.find((s) => s.ticker === selected);
 
   const onCommand = useCallback((cmd: string): boolean => {
