@@ -5,17 +5,25 @@
       "framework": "vite"
     },
     "backend": {
-      "root": "deploy/backend"
+      "root": "deploy/backend",
+      "framework": "fastapi",
+      "entrypoint": "main.py"
     }
   },
   "rewrites": [
     {
       "source": "/api(/.*)?",
-      "destination": { "type": "service", "service": "backend" }
+      "destination": {
+        "type": "service",
+        "service": "backend"
+      }
     },
     {
       "source": "/(.*)",
-      "destination": { "type": "service", "service": "frontend" }
+      "destination": {
+        "type": "service",
+        "service": "frontend"
+      }
     }
   ]
 }
