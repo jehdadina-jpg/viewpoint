@@ -14,7 +14,7 @@
   height: 100vh;
   width: 100vw;
   grid-template-rows: var(--tape-h) var(--cmd-h) minmax(0, 1fr) minmax(0, 0.62fr) var(--strip-h);
-  grid-template-columns: 300px minmax(0, 1fr) 340px;
+  grid-template-columns: 330px minmax(0, 1fr) 340px;
   grid-template-areas:
     "tape tape tape"
     "cmd cmd cmd"
@@ -34,7 +34,7 @@
 .area-strip { grid-area: strip; }
 
 @media (max-width: 1280px) {
-  .app { grid-template-columns: 260px minmax(0, 1fr) 300px; }
+  .app { grid-template-columns: 290px minmax(0, 1fr) 300px; }
 }
 
 /* ---------------------------------------------------------- ticker tape */

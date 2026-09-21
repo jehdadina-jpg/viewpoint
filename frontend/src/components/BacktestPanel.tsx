@@ -4,7 +4,7 @@ import { fmt } from "../api/client";
 import type { Backtest, Metrics, MetricsBlock, PortfolioKey } from "../types";
 import { Panel } from "./Panel";
 
-interface Props { bt: Backtest | null }
+interface Props { bt: Backtest | null; initialRegime?: boolean }
 
 const SERIES: { key: PortfolioKey; label: string; abbr: string; color: string }[] = [
   { key: "bl_sentiment", label: "SENTIMENT-TILTED BL", abbr: "BL", color: "#ff9900" },
@@ -44,9 +44,9 @@ function MetricsTable({ block, title }: { block: MetricsBlock; title: string }) 
  * high-vol regime shading, gross/net toggle, regime-split table, and a date
  * range selector that zooms the time scale.
  */
-export function BacktestPanel({ bt }: Props) {
+export function BacktestPanel({ bt, initialRegime = false }: Props) {
   const [net, setNet] = useState(true);
-  const [showRegime, setShowRegime] = useState(false);
+  const [showRegime, setShowRegime] = useState(initialRegime);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const host = useRef<HTMLDivElement>(null);

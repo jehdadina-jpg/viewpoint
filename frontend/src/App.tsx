@@ -18,11 +18,13 @@ export default function App() {
   const backtest = useApi(() => api.backtest());
   const stats = useApi(() => api.stats());
   const { ticks, status } = useTicks();
-  const [selected, setSelected] = useState<string>("NVDA");
+  // URL params for deep-linking / demos: ?t=NVDA&regime=1
+  const params = new URLSearchParams(location.search);
+  const [selected, setSelected] = useState<string>((params.get("t") ?? "NVDA").toUpperCase());
 
   // default to the largest BL weight once the portfolio loads
   useEffect(() => {
-    if (portfolio.data && !stocks.data?.stocks.some((s) => s.ticker === selected)) {
+    if (portfolio.data && stocks.data && !stocks.data.stocks.some((s) => s.ticker === selected)) {
       const top = Object.entries(portfolio.data.weights).sort((a, b) => b[1] - a[1])[0]?.[0];
       if (top) setSelected(top);
     }
@@ -65,7 +67,7 @@ export default function App() {
       </div>
 
       <PortfolioPanel portfolio={portfolio.data} stats={stats.data} selected={selected} onSelect={setSelected} />
-      <BacktestPanel bt={backtest.data} />
+      <BacktestPanel bt={backtest.data} initialRegime={params.get("regime") === "1"} />
       <StatsStrip stats={stats.data} />
     </div>
   );
